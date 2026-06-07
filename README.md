@@ -62,7 +62,7 @@ python train_model.py
 python inference.py
 ```
 - Opens your webcam and predicts gestures in real time
-- Green text = high confidence (≥85%), orange = low confidence, red = no hand detected
+- Green text = high confidence (≥80%), orange = low confidence, red = no hand detected
 - Press `Q` to quit
 
 ## Model
