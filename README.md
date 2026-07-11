@@ -75,6 +75,9 @@ python inference.py
 | Output | 4 gesture classes |
 | Val accuracy | 98.89% |
 
+<img width="800" height="600" alt="confusion_matrix" src="https://github.com/user-attachments/assets/384a9ca7-9227-46b3-b0a2-eab353d3fb88" />
+
+
 ## Requirements
 
 - Python 3.8+
