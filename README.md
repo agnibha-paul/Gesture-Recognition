@@ -3,8 +3,7 @@
 A real-time hand gesture recognition system built with MediaPipe's Hand Landmarker (Tasks API) and a PyTorch MLP classifier. Trained on 8 gesture classes with **98.8% validation accuracy**.
 
 <p align="center">
-  <img src="assets/inference_rabbit.png" alt="Live inference example" width="260"/>
-  <img src="assets/collection_peace.png" alt="Data collection example" width="260"/>
+  <img src="assets/demo.gif" alt="Live demo" width="320"/>
 </p>
 
 ## Gestures
@@ -37,6 +36,8 @@ The pipeline is fully config-driven — adding a new gesture only requires updat
 ├── train_model.py        # Train the PyTorch classifier
 ├── inference.py          # Live real-time gesture recognition
 ├── gesture_data.csv      # Collected landmark data + labels
+├── requirements.txt      # Python dependencies
+├── assets/               # Images/GIF used in this README
 └── README.md
 ```
 
@@ -44,7 +45,7 @@ The pipeline is fully config-driven — adding a new gesture only requires updat
 
 **Install dependencies**
 ```bash
-pip install mediapipe torch opencv-python scikit-learn matplotlib seaborn pandas numpy
+pip install -r requirements.txt
 ```
 
 > The MediaPipe `hand_landmarker.task` model file (~30MB) is downloaded automatically on first run.
@@ -61,6 +62,10 @@ python collect_gestures.py
 - Press `Q` to quit
 - Data is saved to `gesture_data.csv`
 
+<p align="center">
+  <img src="assets/collection_peace.png" alt="Data collection example" width="260"/>
+</p>
+
 ### 2. Train the model
 ```bash
 python train_model.py
@@ -76,6 +81,10 @@ python inference.py
 - Opens your webcam and predicts gestures in real time with a confidence HUD
 - Green text = high confidence (≥80%), orange = low confidence, red = no hand detected
 - Press `Q` to quit
+
+<p align="center">
+  <img src="assets/inference_rabbit.png" alt="Live inference example" width="260"/>
+</p>
 
 ## Model
 
