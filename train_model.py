@@ -10,7 +10,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# ─── Config ───────────────────────────────────────────────────────────────────
+# ---------- Config ----------
 CSV_PATH    = "gesture_data.csv"
 MODEL_PATH  = "gesture_model.pth"
 EPOCHS      = 50
@@ -23,7 +23,7 @@ PATIENCE    = 10          # early stopping patience
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {DEVICE}\n")
 
-# ─── Dataset ──────────────────────────────────────────────────────────────────
+# ------------------- Dataset ----------------
 class GestureDataset(Dataset):
     def __init__(self, X, y):
         self.X = torch.tensor(X, dtype=torch.float32)
@@ -35,7 +35,7 @@ class GestureDataset(Dataset):
     def __getitem__(self, idx):
         return self.X[idx], self.y[idx]
 
-# ─── Model ────────────────────────────────────────────────────────────────────
+# ------------------ Model --------------------
 class GestureNet(nn.Module):
     def __init__(self, input_size, num_classes):
         super().__init__()
@@ -56,7 +56,7 @@ class GestureNet(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-# ─── Load data ────────────────────────────────────────────────────────────────
+# -------------------- Load data -------------------------
 print("Loading data...")
 df = pd.read_csv(CSV_PATH)
 
@@ -72,7 +72,7 @@ y_enc  = le.fit_transform(y)
 print(f"Classes : {list(le.classes_)}")
 print(f"Input shape : {X.shape}\n")
 
-# ─── Split ────────────────────────────────────────────────────────────────────
+# ------------- Split ----------------
 X_train, X_val, y_train, y_val = train_test_split(
     X, y_enc, test_size=TEST_SIZE, random_state=RANDOM_SEED, stratify=y_enc
 )
@@ -82,7 +82,7 @@ print(f"Val samples   : {len(X_val)}\n")
 train_loader = DataLoader(GestureDataset(X_train, y_train), batch_size=BATCH_SIZE, shuffle=True)
 val_loader   = DataLoader(GestureDataset(X_val,   y_val),   batch_size=BATCH_SIZE)
 
-# ─── Init model ───────────────────────────────────────────────────────────────
+# ------------------ Init model ----------------------
 model     = GestureNet(input_size=126, num_classes=len(le.classes_)).to(DEVICE)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=LR)
@@ -91,7 +91,7 @@ scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0
 print(model)
 print(f"\nTotal params: {sum(p.numel() for p in model.parameters()):,}\n")
 
-# ─── Training loop ────────────────────────────────────────────────────────────
+# ----------------------------- Training loop ---------------------------
 history = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
 
 best_val_acc   = 0.0
@@ -100,7 +100,7 @@ patience_count = 0
 print("Training...\n")
 for epoch in range(1, EPOCHS + 1):
 
-    # ── Train ──
+    # ------ Train ---
     model.train()
     train_loss, train_correct = 0.0, 0
     for X_batch, y_batch in train_loader:
@@ -116,7 +116,7 @@ for epoch in range(1, EPOCHS + 1):
     train_loss /= len(X_train)
     train_acc   = train_correct / len(X_train)
 
-    # ── Validate ──
+    # ----------- Validate ----------
     model.eval()
     val_loss, val_correct = 0.0, 0
     with torch.no_grad():
@@ -141,7 +141,7 @@ for epoch in range(1, EPOCHS + 1):
           f"Train loss: {train_loss:.4f} acc: {train_acc:.4f} | "
           f"Val loss: {val_loss:.4f} acc: {val_acc:.4f}")
 
-    # ── Early stopping ──
+    # --------- Early stopping -----------
     if val_acc > best_val_acc:
         best_val_acc = val_acc
         torch.save(model.state_dict(), MODEL_PATH)
@@ -152,7 +152,7 @@ for epoch in range(1, EPOCHS + 1):
             print(f"\nEarly stopping at epoch {epoch} (best val acc: {best_val_acc:.4f})")
             break
 
-# ─── Evaluate best model ──────────────────────────────────────────────────────
+# ------------ Evaluate best model ------------
 print("\n=== Evaluation (best model) ===")
 model.load_state_dict(torch.load(MODEL_PATH))
 model.eval()
@@ -172,7 +172,7 @@ print(f"\nBest val accuracy: {best_val_acc:.4f}\n")
 print("Classification Report:")
 print(classification_report(y_true_cls, y_pred_cls))
 
-# ─── Confusion matrix ─────────────────────────────────────────────────────────
+# ------------------ Confusion matrix ---------------------
 cm = confusion_matrix(y_true_cls, y_pred_cls, labels=le.classes_)
 plt.figure(figsize=(8, 6))
 sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
@@ -185,7 +185,7 @@ plt.savefig("confusion_matrix.png")
 plt.show()
 print("Saved: confusion_matrix.png")
 
-# ─── Training curves ──────────────────────────────────────────────────────────
+# -------------------- Training curves --------------------------
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
 ax1.plot(history["train_acc"], label="Train")
 ax1.plot(history["val_acc"],   label="Val")
@@ -200,7 +200,7 @@ plt.savefig("training_curves.png")
 plt.show()
 print("Saved: training_curves.png")
 
-# ─── Save label classes ───────────────────────────────────────────────────────
+# --------------- Save label classes -----------------------
 np.save("label_classes.npy", le.classes_)
 print(f"Saved: {MODEL_PATH}")
 print(f"Saved: label_classes.npy")
