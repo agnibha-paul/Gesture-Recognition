@@ -34,7 +34,7 @@ options         = vision.HandLandmarkerOptions(
 landmarker      = vision.HandLandmarker.create_from_options(options)
 
 # ------------ CSV setup -----------
-file_exists = os.path.exists(OUTPUT_CSV)
+file_exists = os.path.exists(OUTPUT_CSV) and os.path.getsize(OUTPUT_CSV) > 0
 csv_file    = open(OUTPUT_CSV, "a", newline="")
 csv_writer  = csv.writer(csv_file)
 
