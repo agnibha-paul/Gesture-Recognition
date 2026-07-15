@@ -8,7 +8,7 @@ from mediapipe.tasks.python import vision
 import urllib.request
 import os
 
-# ─── Config ───────────────────────────────────────────────────────────────────
+# --------- Config ------------------
 MODEL_PATH      = "gesture_model.pth"
 LABELS_PATH     = "label_classes.npy"
 TASK_MODEL_PATH = "hand_landmarker.task"
@@ -17,13 +17,13 @@ CONFIDENCE_THRESHOLD = 0.8
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# ─── Download MediaPipe model if needed ───────────────────────────────────────
+# ------------- Download MediaPipe model if needed ------------------
 if not os.path.exists(TASK_MODEL_PATH):
     print("Downloading HandLandmarker model...")
     urllib.request.urlretrieve(TASK_MODEL_URL, TASK_MODEL_PATH)
     print("Download complete.")
 
-# ─── Gesture model ────────────────────────────────────────────────────────────
+# -------------- Gesture model ----------------
 class GestureNet(nn.Module):
     def __init__(self, input_size, num_classes):
         super().__init__()
@@ -44,7 +44,7 @@ class GestureNet(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-# ─── Load model + labels ──────────────────────────────────────────────────────
+# --------------- Load model + labels -----------------
 le_classes  = np.load(LABELS_PATH, allow_pickle=True)
 num_classes = len(le_classes)
 
@@ -53,7 +53,7 @@ model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
 model.eval()
 print(f"Model loaded — classes: {list(le_classes)}")
 
-# ─── MediaPipe HandLandmarker ─────────────────────────────────────────────────
+# ------------------ MediaPipe HandLandmarker --------------------
 base_options = python.BaseOptions(model_asset_path=TASK_MODEL_PATH)
 options      = vision.HandLandmarkerOptions(
     base_options=base_options,
@@ -64,7 +64,7 @@ options      = vision.HandLandmarkerOptions(
 )
 landmarker = vision.HandLandmarker.create_from_options(options)
 
-# ─── Helper: normalize landmarks ──────────────────────────────────────────────
+# ------------------- Helper: normalize landmarks -------------------------
 def normalize(landmarks_21):
     coords = np.array([[lm.x, lm.y, lm.z] for lm in landmarks_21])
     origin = coords[0]
@@ -74,7 +74,7 @@ def normalize(landmarks_21):
         coords = coords / scale
     return coords.flatten().tolist()
 
-# ─── Helper: predict gesture ──────────────────────────────────────────────────
+# -------- Helper: predict gesture -------------------------------
 def predict(result):
     if len(result.hand_landmarks) == 0:
         return None, 0.0
@@ -96,7 +96,7 @@ def predict(result):
     confidence = conf.item()
     return label, confidence
 
-# ─── Draw landmarks ───────────────────────────────────────────────────────────
+# ------------ Draw landmarks -----------------
 def draw_landmarks(frame, result):
     for hand_lms in result.hand_landmarks:
         h, w, _ = frame.shape
@@ -116,7 +116,7 @@ def draw_landmarks(frame, result):
         for pt in points:
             cv2.circle(frame, pt, 4, (0, 255, 0), -1)
 
-# ─── Main loop ────────────────────────────────────────────────────────────────
+# ---------- Main loop -------------------
 def main():
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
@@ -138,7 +138,7 @@ def main():
 
         label, confidence = predict(result)
 
-        # ── HUD ───────────────────────────────────────────────────────────────
+        # -------------- HUD -------------------
         h, w, _ = frame.shape
 
         if label and confidence >= CONFIDENCE_THRESHOLD:
