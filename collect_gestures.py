@@ -8,21 +8,21 @@ from mediapipe.tasks.python import vision
 from mediapipe.tasks.python.components.containers import landmark as landmark_module
 import urllib.request
 
-# ─── Config ───────────────────────────────────────────────────────────────────
-GESTURES        = ["taishakuten_in", "perfect", "joined_hands", "closed_fist"]
+# ------ Config --------
+GESTURES        = ["Peace", "Perfect", "Joined hands", "Closed fist", "Rabbit", "Call me", "Thumbs Up", 'Thumbs Down']
 OUTPUT_CSV      = "gesture_data.csv"
 CAPTURE_EVERY_N = 5          # capture a sample every N frames when hand detected
 SAMPLES_TARGET  = 300        # print a warning when you hit this per gesture
 MODEL_PATH      = "hand_landmarker.task"
 MODEL_URL       = "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task"
 
-# ─── Download model if needed ─────────────────────────────────────────────────
+# ------- Download model if needed --------
 if not os.path.exists(MODEL_PATH):
     print(f"Downloading HandLandmarker model...")
     urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
     print("Download complete.")
 
-# ─── Build HandLandmarker ─────────────────────────────────────────────────────
+# -------- Build HandLandmarker ------------
 base_options    = python.BaseOptions(model_asset_path=MODEL_PATH)
 options         = vision.HandLandmarkerOptions(
     base_options=base_options,
@@ -33,7 +33,7 @@ options         = vision.HandLandmarkerOptions(
 )
 landmarker      = vision.HandLandmarker.create_from_options(options)
 
-# ─── CSV setup ────────────────────────────────────────────────────────────────
+# ------------ CSV setup -----------
 file_exists = os.path.exists(OUTPUT_CSV)
 csv_file    = open(OUTPUT_CSV, "a", newline="")
 csv_writer  = csv.writer(csv_file)
@@ -43,7 +43,7 @@ if not file_exists:
     lm_headers = [f"lm{i}_{axis}" for i in range(42) for axis in ("x", "y", "z")]
     csv_writer.writerow(lm_headers + ["label"])
 
-# ─── Helper: normalize landmarks ──────────────────────────────────────────────
+# ------------ Helper: normalize landmarks --------------
 def normalize(landmarks_21):
     """
     Normalize 21 landmarks relative to wrist (landmark 0).
@@ -57,7 +57,7 @@ def normalize(landmarks_21):
         coords = coords / scale
     return coords.flatten().tolist()
 
-# ─── Count existing samples per gesture ───────────────────────────────────────
+# ---------- Count existing samples per gesture ------------
 def count_samples():
     counts = {g: 0 for g in GESTURES}
     if os.path.exists(OUTPUT_CSV):
@@ -69,7 +69,7 @@ def count_samples():
                     counts[row[-1]] += 1
     return counts
 
-# ─── Main ─────────────────────────────────────────────────────────────────────
+# ------------ Main -----------
 def main():
     print("\n=== Gesture Data Collector ===")
     print("Gestures available:")
@@ -98,7 +98,7 @@ def main():
 
         hand_detected = len(result.hand_landmarks) > 0
 
-        # ── Auto-capture every N frames if gesture selected and hand detected ──
+        # Auto-capture every N frames if gesture selected and hand detected
         if current_gesture_idx is not None and hand_detected and frame_count % CAPTURE_EVERY_N == 0:
             gesture_name = GESTURES[current_gesture_idx]
 
@@ -115,7 +115,7 @@ def main():
             csv_file.flush()
             sample_count += 1
 
-        # ── Draw landmarks ─────────────────────────────────────────────────────
+        # ----------- Draw landmarks --------
         annotated = frame.copy()
         for hand_lms in result.hand_landmarks:
             for lm in hand_lms:
@@ -123,14 +123,14 @@ def main():
                 cx, cy  = int(lm.x * w), int(lm.y * h)
                 cv2.circle(annotated, (cx, cy), 4, (0, 255, 0), -1)
 
-        # ── HUD ────────────────────────────────────────────────────────────────
-        gesture_label = GESTURES[current_gesture_idx] if current_gesture_idx is not None else "None (press 0-3)"
+        # ------------------ HUD ---------------------
+        gesture_label = GESTURES[current_gesture_idx] if current_gesture_idx is not None else f"None (press 0-{len(GESTURES)-1})"
         status_color  = (0, 255, 0) if hand_detected else (0, 0, 255)
 
         cv2.putText(annotated, f"Gesture : {gesture_label}",  (10, 30),  cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
         cv2.putText(annotated, f"Captured: {sample_count}",   (10, 60),  cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
         cv2.putText(annotated, f"Hand    : {'YES' if hand_detected else 'NO'}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, status_color, 2)
-        cv2.putText(annotated, "Keys: 0-3 select gesture | Q quit", (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
+        cv2.putText(annotated, f"Keys: 0-{len(GESTURES)-1} select gesture | Q quit", (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
 
         cv2.imshow("Gesture Collector", annotated)
 
@@ -138,7 +138,7 @@ def main():
         print(key)
         if key == ord('q') or key == ord('Q'):
             break
-        elif ord('0') <= key <= ord('3'):
+        elif ord('0') <= key <= ord('7'):
             idx = key - ord('0')
             if idx < len(GESTURES):
                 current_gesture_idx = idx
